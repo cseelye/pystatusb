@@ -1,0 +1,15 @@
+language: python
+python:
+- '3.6'
+script:
+- sed -e "s/__VERSION__/${TRAVIS_TAG}/" -i setup.py
+deploy:
+  provider: pypi
+  distributions: sdist
+  skip_cleanup: true
+  on:
+    tags: true
+    branch: master
+  user: cseelye
+  password:
+    secure: f0yGSZiwruZDK9A9nORdfucy7GFksjP2d2ZsXYAHm+sTReuHPqIwgcSaO0xnKK65XkwLcw/KfY00x0A6/c2UHI4uqfwVtfm2trGG//Dg/QT1KN52MCiEdBpKQiiUhhZspbl6YaY3KqeHZHkHT23Ug1GePSsJdm4lzVFQAmu1eId7kGBk4pemFk/CzYlL5CF5RcVqrSjY+r2iKRzuYfbMkD9E0kdsLcAtM90nTW+TCE9gP4Eem40I578qVB33+51f23qOJoxrYOFhK3mcvuceYtMBiVTDo/g81WqU+IGRmTCaMOW9ozHoY7MPq4KtS55hoJ4dgEV11wbojWqcyyeUnj7vapdhVN/LsaEUAZqiMlrXxEmsILImJT1YeQsQR9kEUcnfuPnBmHiyjzI/pzgD3QyWz3YhPuTJxZFJn990t/UBvRjYZvtrXP74KBS14z9Bk1Fq6BB3cCv7eWOJxPf3P10cSOGhc4ST9ibBCR6ILTyp52hST+VW5iRUCwq5nEWlFDLjpxfY4VD0zM+0vyMxR96X8Ykom171bfH9t5Z2YbmtwsJ3osepIeirj311UXCd9O1TfcnxFISaXd/5HCXSHeVrcNvh2Qajiu9DwFMua8LYcnfzDb7ykGIzCWLSQFyeZFCWh7qum8E/UEJ/HaHUiLJuXmesJ7bcuyzoDysSFo8=
