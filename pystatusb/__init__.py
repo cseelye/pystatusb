@@ -16,9 +16,9 @@ PRODUCT_ID = 0x03df
 
 class Colors(Enum):
     """Easy shortcuts for common colors"""
-    RED = 256**2
-    GREEN = 256**1
-    BLUE = 256**0
+    RED =0xFF0000
+    GREEN = 0x00FF00
+    BLUE = 0x0000FF
     CYAN = BLUE + GREEN
     VIOLET = RED + BLUE
     WHITE = RED + GREEN + BLUE
@@ -94,7 +94,7 @@ class StatUSB():
                 if digit1 >= 13 and digit1 <= 16:
                     digit0 += 1
                     digit1 = 0
-            # If the first digit is 14-15, map it back to 14, witht the second digit no larger than e
+            # If the first digit is 14-15, map it back to 14, with the second digit no larger than e
             # eg 0xf1 => 0xe1 and 0xff => 0xee
             elif digit0 >= 14 and digit0 <= 15:
                 digit0 = 14
@@ -105,20 +105,20 @@ class StatUSB():
 
         return "".join(colors)
 
-    def _write_message_get_response(self, message, initial_len, sentinal):
+    def _write_message_get_response(self, message, initial_len, sentinel):
         """
         Write a message to the statUSB and read the response.
 
-        This funtion will write a response to the statUSB serial interface, and
+        This function will write a message to the statUSB serial interface, and
         then read the response back. The response up to and including the
-        sentinal is returned to the caller, and any remaining data in the
+        sentinel is returned to the caller, and any remaining data in the
         receive buffer is drained and discarded.
 
         Args:
             message (str): the message to send
             initial_len (int): the length of the expected response, as a hint
-                for how much data to attempt read back from the serial port
-            sentinal (str): the string that marks the end of the response
+                for how much data to attempt to read back from the serial port
+            sentinel (str): the string that marks the end of the response
 
         Returns:
             str: the response back from the statUSB device
@@ -129,9 +129,9 @@ class StatUSB():
             num = serport.write(message)
             serport.read(num)
 
-            # Read the expected result length, then read until we hit the sentinal
+            # Read the expected result length, then read until we hit the sentinel
             stream.write(serport.read(initial_len))
-            while not stream.getvalue().decode().endswith(sentinal.decode()):
+            while not stream.getvalue().decode().endswith(sentinel.decode()):
                 stream.write(serport.read())
             # Drain anything else off the serial port buffer, discarding it
             while serport.in_waiting > 0:
@@ -140,7 +140,7 @@ class StatUSB():
 
     def set_color_raw(self, color_spec):
         """
-        Set the color and internsity of the device using a raw RGB string
+        Set the color of the device using a raw RGB string
 
         Args:
             color_spec (str): the color to set, in 6 character RGB (RRGGBB)
@@ -170,13 +170,13 @@ class StatUSB():
             red = int(m.group(1), 16)
             green = int(m.group(2), 16)
             blue = int(m.group(3), 16)
-            return red * 256 * 256 + green * 256 + blue
+            return (red << (8 * 2)) + (green << (8 * 1)) + (blue << (8 * 0))
 
         raise ValueError("Could not parse result [{}]".format(result))
 
     def set_transition_time(self, time_ms):
         """
-        Set the fade tiem used between color changes
+        Set the fade time used between color changes
 
         Args:
             time_ms (int): the fade time, in milliseconds
@@ -206,8 +206,11 @@ class StatUSB():
             color (Colors): the color to set from the Colors enum
             intensity_pct (int): the brightness to set, as a percentage
         """
-        color_val = int(255 * intensity_pct/100.0)
-        self.set_color_raw("{:06x}".format(color_val * color.value))
+        setpoint = (int((color.value >> (8 * 2) & 0xFF) * (intensity_pct/100.0)) << (8 * 2)) + \
+                    (int((color.value >> (8 * 1) & 0xFF) * (intensity_pct/100.0)) << (8 * 1)) + \
+                    (int((color.value >> (8 * 0) & 0xFF) * (intensity_pct/100.0)) << (8 * 0))
+        
+        self.set_color_raw("{:06x}".format(setpoint))
 
     def set_sequence(self, sequence_raw):
         """
